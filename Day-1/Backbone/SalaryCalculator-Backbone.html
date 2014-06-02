@@ -68,6 +68,11 @@
 			return this;
 		}
 	});
+	$(function(){
+		var calc = new SalaryCalculator();
+		var view = new SalaryCalculatorView({model : calc});
+		view.render().$el.appendTo(document.body);
+	});
 	</script>
 </head>
 <body>
