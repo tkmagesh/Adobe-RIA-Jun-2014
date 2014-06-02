@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Task Manager</title>
+	<script src="jquery-1.11.1.js"></script>
+	<script>
+	/*Task Model*/
+	function Task(defaults){
+		var modelState = defaults || {name : '', isCompleted : false};
+		this.set = function(attrName,value){
+			modelState[attrName] = value;
+			this.triggerChange(attrName);
+		};
+		this.get = function(attrName){
+			return modelState[attrName];
+		};
+
+		var changeSubscribers = {};
+		this.addChangeSubscriber = function(attrName, callback){
+			changeSubscribers[attrName] = changeSubscribers[attrName] || [];
+			changeSubscribers[attrName].push(callback);
+		};
+		this.triggerChange = function(attrName){
+			var subscribers = changeSubscribers[attrName] || [];
+			var that = this;
+			subscribers.forEach(function(callback){
+				callback.call(that);
+			});
+		};
+		this.toggleCompletion = function(){
+			this.set('isCompleted', !this.get('isCompleted'));
+		}
+		this.remove = function(){
+			this.triggerChange('remove');
+		}
+	}
+
+	function TaskView(model){
+		this.task = model;
+		var $root = this.$root = $("<li></li>");
+
+		this.initialize = function(){
+			/*Respond to UI events*/
+			this.$root.on("click",function(){
+				model.toggleCompletion();
+			});
+
+			/*Respond to Model Changes*/
+			model.addChangeSubscriber('isCompleted', function(){
+				if (model.get('isCompleted')){
+					$root.addClass("completed");
+				} else {
+					$root.removeClass("completed");
+				}
+			});
+
+			model.addChangeSubscriber('remove', function(){
+				$root.remove();
+			});
+
+		};
+
+		this.render = function(){
+			this.$root.text(model.get('name'));
+			if (model.get('isCompleted')){
+				$root.addClass("completed");
+			} else {
+				$root.removeClass("completed");
+			}
+			return this;
+		};
+	}
+
+	function TaskCollection(){
+		var list = [];
+		this.add = function(taskName){
+			var task = new Task({name : taskName, isCompleted : false});
+			list.push(task);
+			this.triggerChange('add',task);
+			return task;
+		};
+		this.removeCompleted = function(){
+			for(var i=list.length-1;i>=0;i--){
+				var task = list[i];
+				if (task.get('isCompleted')){
+					list.splice(i,1);
+					task.remove();
+				}
+			}
+		}
+		var changeSubscribers = {};
+		this.addChangeSubscriber = function(attrName, callback){
+			changeSubscribers[attrName] = changeSubscribers[attrName] || [];
+			changeSubscribers[attrName].push(callback);
+		};
+		this.triggerChange = function(attrName){
+			var subscribers = changeSubscribers[attrName] || [];
+			var args = Array.prototype.slice.call(arguments,1);
+			var that = this;
+			subscribers.forEach(function(callback){
+				callback.apply(that,args);
+			});
+		};
+	}
+
+	function TaskCollectionView(collection){
+		this.tasks = collection;
+		var $root = this.$root = $("<div></div>");
+		this.initialize = function(){
+			/*UI Events*/
+			$root.on("click","#btnAddTask",function(){
+				var taskName = $("#txtTask",$root).val();
+				collection.add(taskName);
+			});
+
+			$root.on("click","#btnRemoveCompleted",function(){
+				collection.removeCompleted();
+			});
+
+			/*Collection Events*/
+			collection.addChangeSubscriber("add",function(newTask){
+				var tv = new TaskView(newTask);
+				tv.initialize();
+				tv.render().$root.appendTo($("#ulTaskList",$root));
+			});
+		}	
+		this.render = function(){
+			$root.append($("#taskCollectionTemplate").html());
+			return this;
+		}
+	}
+
+
+	</script>
+	<script type="text/template" id="taskCollectionTemplate">
+		<span>Task :</span>
+		<input type="text" name="" id="txtTask">
+		<input type="button" value="Add Task" id="btnAddTask">
+		<input type="button" value="Remove Completed" id="btnRemoveCompleted">
+		<ul id="ulTaskList"></ul>
+	</script>
+</head>
+<body>
+	<h3>Task Manager</h3>
+	<hr>
+	
+</body>
+</html>
