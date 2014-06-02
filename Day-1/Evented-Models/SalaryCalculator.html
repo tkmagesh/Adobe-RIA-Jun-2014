@@ -11,69 +11,108 @@
 	<script src="jquery-1.11.1.js"></script>
 	<script>
 	function SalaryCalculator(){
-		this.basic = 0;
-		this.hra = 0;
-		this.da = 0;
-		this.tax = 0;
-		this.salary = 0;
-
-		var salaryChangeSubscribers = [];
-		this.addSalaryChangeSubscriber = function(callback){
-			salaryChangeSubscribers.push(callback);
+		var modelState = {};
+		this.set = function(attrName,value){
+			modelState[attrName] = value;
+			this.triggerChange(attrName);
 		};
-		this.triggerSalaryChange = function(){
-			salaryChangeSubscribers.forEach(function(cb){
-				cb();
+		this.get = function(attrName){
+			return modelState[attrName];
+		};
+
+		var changeSubscribers = {};
+		this.addChangeSubscriber = function(attrName, callback){
+			changeSubscribers[attrName] = changeSubscribers[attrName] || [];
+			changeSubscribers[attrName].push(callback);
+		};
+		this.triggerChange = function(attrName){
+			var subscribers = changeSubscribers[attrName] || [];
+			var that = this;
+			subscribers.forEach(function(callback){
+				callback.call(that);
 			});
 		}
 	}
 	SalaryCalculator.prototype.calculate = function(){
-		var gross = this.basic + this.hra + this.da;
-		var net = gross * ((100-this.tax)/100);
-		this.salary = net;
-		this.triggerSalaryChange();
+		var gross = this.get('basic') + this.get('hra') + this.get('da');
+		var net = gross * ((100-this.get('tax'))/100);
+		this.set('salary',net);
 	}
 	
 	</script>
+	<script>
+	function SalaryCalculatorView(model){
+		this.calculator = model;
+		var $root = this.$root = $("<div></div>");
+
+		this.initialize = function(){
+				/*Respond to UI changes*/
+			this.$root.on("change","#txtBasic", function(){
+				model.set('basic', parseInt(this.value,10));
+			});
+
+			this.$root.on("change","#txtHra", function(){
+				model.set('hra',parseInt(this.value,10));
+			});
+
+			this.$root.on("change","#txtDa", function(){
+				model.set('da', parseInt(this.value,10));
+			});
+
+			this.$root.on("change","#rangeTax", function(){
+				model.set('tax', parseInt(this.value,10));
+			});
+			
+			this.$root.on("click","#btnCalculate",function(){ 
+				model.calculate();
+			});
+
+			/*Respond to Model Changes*/
+			model.addChangeSubscriber('salary', function(){
+				console.log(this);
+				$("#divResult",$root).html(this.get('salary'));
+			});
+
+			model.addChangeSubscriber('basic',function(){
+				$("#txtBasic",$root).val(this.get('basic'));
+			});
+
+			model.addChangeSubscriber('hra',function(){
+				$("#txtHra",$root).val(this.get('hra'));
+			});
+
+			model.addChangeSubscriber('da',function(){
+				$("#txtDa",$root).val(this.get('da'));
+			});
+
+			model.addChangeSubscriber('tax',function(){
+				$("#rangeTax",$root).val(this.get('tax'));
+				$("#spanTax",$root).text(this.get('tax') + "%");
+			});
+		};
+
+		this.render = function(){
+			var templateHTML = $("#salaryCalculatorTemplate").html();
+			this.$root.append(templateHTML);
+			return this;
+		};
+
+	}
+	</script>
 	
 	<script>
-	var calculator = new SalaryCalculator();
+	
 	$(function(){
 		
 
-		/*Respond to UI changes*/
-		$("#txtBasic").change(function(){
-			calculator.basic = parseInt($("#txtBasic").val(),10);
-		})
-		$("#txtHra").change(function(){
-			calculator.hra = parseInt($("#txtHra").val(),10);
-		})
-		$("#txtDa").change(function(){
-			calculator.da = parseInt($("#txtDa").val(),10);
-		})
-		$("#rangeTax").change(function(){
-			calculator.tax = parseInt($("#rangeTax").val(),10);
-			$("#spanTax").text(this.value.toString() + "%");
-		})
 		
-		$("#btnCalculate").click(function(){
-			calculator.calculate();
-		});
-
-		/*Respond to Model Changes*/
-		calculator.addSalaryChangeSubscriber(function(){
-			$("#divResult").html(calculator.salary);
-		});
 		
 		
 	});
 
 	</script>
-</head>
-<body>
-	<h3>Salary Calculator</h3>
-	<hr>
-	<div><label for="">Basic :</label><input type="text" name="" id="txtBasic"></div>
+	<script type="text/template" id="salaryCalculatorTemplate">
+		<div><label for="">Basic :</label><input type="text" name="" id="txtBasic"></div>
 	<div><label for="">HRA :</label><input type="text" name="" id="txtHra"></div>
 	<div><label for="">DA :</label><input type="text" name="" id="txtDa"></div>
 	<div>
@@ -85,5 +124,11 @@
 	<div>
 		<div id="divResult">[Salary]</div>
 	</div>
+	</script>
+</head>
+<body>
+	<h3>Salary Calculator</h3>
+	<hr>
+	
 </body>
 </html>
