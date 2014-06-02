@@ -16,18 +16,32 @@
 		this.da = 0;
 		this.tax = 0;
 		this.salary = 0;
+
+		var salaryChangeSubscribers = [];
+		this.addSalaryChangeSubscriber = function(callback){
+			salaryChangeSubscribers.push(callback);
+		};
+		this.triggerSalaryChange = function(){
+			salaryChangeSubscribers.forEach(function(cb){
+				cb();
+			});
+		}
 	}
 	SalaryCalculator.prototype.calculate = function(){
 		var gross = this.basic + this.hra + this.da;
 		var net = gross * ((100-this.tax)/100);
 		this.salary = net;
+		this.triggerSalaryChange();
 	}
 	
 	</script>
 	
 	<script>
+	var calculator = new SalaryCalculator();
 	$(function(){
-		var calculator = new SalaryCalculator();
+		
+
+		/*Respond to UI changes*/
 		$("#txtBasic").change(function(){
 			calculator.basic = parseInt($("#txtBasic").val(),10);
 		})
@@ -44,6 +58,10 @@
 		
 		$("#btnCalculate").click(function(){
 			calculator.calculate();
+		});
+
+		/*Respond to Model Changes*/
+		calculator.addSalaryChangeSubscriber(function(){
 			$("#divResult").html(calculator.salary);
 		});
 		
