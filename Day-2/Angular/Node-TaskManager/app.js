@@ -4,6 +4,7 @@ var favicon = require('static-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var http = require("http");
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
@@ -57,5 +58,6 @@ app.use(function(err, req, res, next) {
     });
 });
 
+http.createServer(app).listen(3000);
+console.log("Server running on port 3000");
 
-module.exports = app;
