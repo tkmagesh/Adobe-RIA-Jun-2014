@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Salary Calculator</title>
+	<script src="angular.js"></script>
+	<script type="text/javascript">
+	function salaryCalculatorController($scope){
+		var calculator = {};
+		calculator.basic = 0;
+		calculator.hra = 0;
+		calculator.da = 0;
+		calculator.tax = 0;
+		calculator.salary = 0;
+		calculator.calculate = function(){
+			var gross = parseInt(this.basic,10) + parseInt(this.hra,10) + parseInt(this.da,10);
+			this.salary = gross * ((100-parseInt(this.tax,10))/100);
+
+		}
+		$scope.calc = calculator;
+	}
+	</script>
+</head>
+<body data-ng-app>
+	<h3>Salary Calculator</h3>
+	<hr>
+	<div data-ng-controller="salaryCalculatorController">
+		<div><label for="">Basic :</label><input type="text" data-ng-model="calc.basic" ></div>
+		<div><label for="">HRA :</label><input type="text" data-ng-model="calc.hra"></div>
+		<div><label for="">DA :</label><input type="text" data-ng-model="calc.da"></div>
+		<div>
+			<label for="">Tax :</label>
+			<input type="range" min="0" max="50" value="0" data-ng-model="calc.tax">
+			<span id="spanTax">{{calc.tax}}</span>
+		</div>
+		<div><input type="button" value="Calculate"  data-ng-click="calc.calculate()"></div>
+		<div>
+			<div >{{calc.salary}}</div>
+		</div>
+
+	</div>
+</body>
+</html>

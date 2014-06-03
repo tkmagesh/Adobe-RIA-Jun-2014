@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Scope Inheritance</title>
+	<style>
+	.inner{
+		margin: 50px;
+	}
+	</style>
+	<script src="angular.js"></script>
+	<script>
+	function mainController($scope){
+		$scope.myModel = {name  : "Magesh"};
+	}
+	function innerController($scope){
+
+	}
+
+	</script>
+</head>
+<body data-ng-app>
+	<div data-ng-controller="mainController">
+		<h3>Main Controller</h3>
+		<input type="text" name="" id="" ng-model="myModel.name">
+		<div>{{myModel.name}}</div>
+		<hr>
+		<div data-ng-controller="innerController" class="inner">
+			<h3>Inner Controller</h3>
+			<input type="text" name="" id="" ng-model="myModel.name">
+			<div>{{myModel.name}}</div>
+		</div>
+
+	</div>
+</body>
+</html>
