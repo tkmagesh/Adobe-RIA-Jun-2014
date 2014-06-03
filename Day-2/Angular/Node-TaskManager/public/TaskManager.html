@@ -10,7 +10,7 @@
 		font-style: italic;
 	}
 	</style>
-	<script src="angular.js"></script>
+	<script src="/javascripts/angular.js"></script>
 	<script>
 	var filterModule = angular.module("filterModules",[]);
 	filterModule.filter("limitLength",function(){
@@ -33,8 +33,18 @@
 				};
 			return Task;
 		})
-		
-		.controller("TaskController", ['$scope','$http', 'Task',function($scope, $http, Task){
+		.factory('TaskService',function($http){
+			return {
+				getAllTasks : function(){
+					return $http({method : 'get', url : '/tasks'});
+				}
+			}
+		})
+		.controller("TaskController", ['$scope','TaskService', 'Task',function($scope, taskService, Task){
+			var p = taskService.getAllTasks();
+			p.success(function(data){
+				$scope.tasks.list = data;
+			});
 			$scope.tasks = {
 				list : [],
 				addTask : function(taskName){
