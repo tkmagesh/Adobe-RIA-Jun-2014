@@ -4,10 +4,16 @@ var pubsub = (function(){
 		subscribers[eventName] = subscribers[eventName] || [];
 		subscribers[eventName].push(callback);
 	};
-	var publish = function(eventName){
+	var publish = function(context,eventName){
 		var subscriptions = subscribers[eventName] || [];
+		var args = Array.prototype.slice.call(arguments,1);
+		//var that = this;
 		for(var i=0;i<subscriptions.length;i++){
-			setTimeout(subscriptions[i]);
+			setTimeout((function(callback){
+				return function(){
+					callback.apply(context,args);
+				}
+			})(subscriptions[i]));
 		}
 	}
     return { 

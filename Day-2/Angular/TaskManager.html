@@ -12,41 +12,60 @@
 	</style>
 	<script src="angular.js"></script>
 	<script>
-	function Task(name){
-		this.name = name;
-		this.isCompleted = false;
-	}
-	Task.prototype.toggleCompletion = function(){
-		this.isCompleted = !this.isCompleted;
-	}
-	function TaskController($scope){
-		$scope.tasks = {
-			list : [],
-			addTask : function(taskName){
-				var newTask = new Task(taskName)
-				this.list.push(newTask);
-			},
-			toggleCompletion : function(task){
-				task.toggleCompletion();
-			},
-			removeCompleted : function(){
-				for(var i = this.list.length-1;i>=0;i--){
-					if (this.list[i].isCompleted)
-						this.list.splice(i,1);
-				}
-			},
-			getCompletedCount : function(){
-				return this.list.filter(function(t){
-					return t.isCompleted;
-				}).length;
+	var filterModule = angular.module("filterModules",[]);
+	filterModule.filter("limitLength",function(){
+			return function(taskName,length){
+				length = length || 10;
+				return taskName.length > length ? taskName.substr(0,length) + "..." : taskName;
 			}
-		}
-	}
+		});
+
+
+	angular
+		.module("taskApp",['filterModules'])
+		.factory('Task',function(){
+			function Task(name){
+					this.name = name;
+					this.isCompleted = false;
+				}
+				Task.prototype.toggleCompletion = function(){
+					this.isCompleted = !this.isCompleted;
+				};
+			return Task;
+		})
+		
+		.controller("TaskController", function($scope, Task){
+			$scope.tasks = {
+				list : [],
+				addTask : function(taskName){
+					var newTask = new Task(taskName)
+					this.list.push(newTask);
+				},
+				toggleCompletion : function(task){
+					task.toggleCompletion();
+				},
+				removeCompleted : function(){
+					for(var i = this.list.length-1;i>=0;i--){
+						if (this.list[i].isCompleted)
+							this.list.splice(i,1);
+					}
+				},
+				getCompletedCount : function(){
+					return this.list.filter(function(t){
+						return t.isCompleted;
+					}).length;
+				}
+			}
+		});
+	
+	
 	</script>
 </head>
-<body data-ng-app data-ng-controller="TaskController">
+<body data-ng-app="taskApp" data-ng-controller="TaskController">
 	<h1>Task Manager</h1>
 	Search : <input type="text" data-ng-model="searchTerm.name">
+	<br>
+	limit length : <input type="text" data-ng-model="taskNameLength">
 	<hr>
 	<span>Task :</span>
 	<input type="text" data-ng-model="newTask">
@@ -57,7 +76,7 @@
 			data-ng-repeat="task in tasks.list | filter:searchTerm" 
 			data-ng-click="task.toggleCompletion()"
 			data-ng-class="{completed : task.isCompleted}"
-			>{{task}}</li>
+			>{{task.name | limitLength:taskNameLength}}</li>
 	</ul>
 	<div>
 		Total Tasks : {{tasks.list.length}}
